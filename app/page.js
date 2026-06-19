@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import PfpGenerator from "./components/PfpGenerator";
+import MemeMarquee from "./components/MemeMarquee";
+import MemoryGame from "./components/MemoryGame";
 
 const CA = "H4chsqkobEKjjiAt7r3TLJvp7qprR6aasjJFtkQcAqun";
 const X_URL = "https://x.com/i/communities/2004690431997514205";
@@ -14,39 +16,36 @@ function XIcon() {
   );
 }
 
-function Snow() {
-  const [flakes, setFlakes] = useState([]);
-  useEffect(() => {
-    const arr = Array.from({ length: 36 }).map((_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      size: 8 + Math.random() * 14,
-      dur: 7 + Math.random() * 12,
-      delay: -Math.random() * 12,
-      op: 0.2 + Math.random() * 0.6,
-    }));
-    setFlakes(arr);
-  }, []);
-  return (
-    <div className="snow-layer" aria-hidden="true">
-      {flakes.map((f) => (
-        <span
-          key={f.id}
-          className="flake"
-          style={{
-            left: `${f.left}%`,
-            fontSize: `${f.size}px`,
-            animationDuration: `${f.dur}s`,
-            animationDelay: `${f.delay}s`,
-            opacity: f.op,
-          }}
-        >
-          ❄
-        </span>
-      ))}
-    </div>
-  );
-}
+/* outline icons for the About cards */
+const Icon = {
+  rocket: (
+    <svg viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+  ),
+  heart: (
+    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+  ),
+  bolt: (
+    <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+  ),
+  star: (
+    <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+  ),
+  target: (
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+  ),
+  people: (
+    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  ),
+};
+
+const FEATURES = [
+  { icon: "rocket", title: "Degen Energy", text: "Fair launch, no presale, no insiders. The dog answers to the streets, not to suits." },
+  { icon: "heart", title: "Community", text: "Built by and for the pack. Loud holders, open chat, and memes that never sleep." },
+  { icon: "bolt", title: "Solana Speed", text: "Lightning-fast transactions and fees so low you won't even feel the swap." },
+  { icon: "star", title: "Pure Meme", text: "No fake utility deck. One dog, one mask, one ticker — $SKI. That's the whole roadmap." },
+  { icon: "target", title: "The Vision", text: "Take the masked dog from pump.fun OG to the most recognizable mug on Solana." },
+  { icon: "people", title: "Open Door", text: "New to the pack? Copy the contract, mask up, and you're already one of us." },
+];
 
 export default function Page() {
   const [copied, setCopied] = useState(false);
@@ -60,20 +59,19 @@ export default function Page() {
 
   return (
     <>
-      <Snow />
-
       {/* NAV */}
       <nav className="nav">
         <div className="container nav-inner">
           <a className="brand" href="#top">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Ski Mask Dog" />
-            Ski Mask Dog
+            <span className="bt">SKI MASK DOG</span>
           </a>
           <div className="nav-links">
-            <a className="link" href="#about">Lore</a>
+            <a className="link" href="#about">About</a>
             <a className="link" href="#tokenomics">Tokenomics</a>
             <a className="link" href="#buy">How to Buy</a>
+            <a className="link" href="#game">Game</a>
             <a className="link" href="#generator">PFP Lab</a>
             <a className="nav-x" href={X_URL} target="_blank" rel="noopener noreferrer" aria-label="X Community">
               <XIcon />
@@ -85,22 +83,21 @@ export default function Page() {
       {/* HERO */}
       <header id="top" className="container hero">
         <div>
-          <span className="tagchip">
-            <span className="dot" /> Live on Solana · $SKI
-          </span>
+          <span className="wanted">★ Wanted on Solana · $SKI</span>
           <h1>
-            The <span className="accent">coldest</span> dog
-            <br /> on <span className="flame">Solana.</span>
+            <span className="l2">SKI</span><br />
+            <span className="l2">MASK</span><br />
+            <span className="l3">DOG</span>
           </h1>
           <p className="lead">
-            Masked up, never down. Ski Mask Dog pulled his balaclava over the whole
-            chain and never looked back. No roadmap to a moon — just a pack, a meme,
-            and a mask that prints. Pull up. 🐶🎭
+            Masked up, never down. The OG balaclava dog pulled up on Solana and never
+            took the mask off. No roadmap to nowhere — just a pack, a meme, and a
+            ticker that runs the block.
           </p>
           <div className="hero-cta">
-            <a className="btn btn-primary" href="#buy">Get $SKI</a>
-            <a className="btn btn-flame" href="#generator">🎭 Make your PFP</a>
-            <a className="btn btn-ghost" href={X_URL} target="_blank" rel="noopener noreferrer">
+            <a className="btn btn-yellow" href="#buy">Get $SKI</a>
+            <a className="btn btn-pink" href="#generator">Make your PFP</a>
+            <a className="btn btn-ink" href={X_URL} target="_blank" rel="noopener noreferrer">
               <XIcon /> Join the pack
             </a>
           </div>
@@ -108,14 +105,12 @@ export default function Page() {
           <div className="ca-bar">
             <span className="ca-label">Contract</span>
             <code>{CA}</code>
-            <button className="copy-btn" onClick={copyCA}>
-              {copied ? "✓ Copied" : "Copy"}
-            </button>
+            <button className="copy-btn" onClick={copyCA}>{copied ? "Copied" : "Copy"}</button>
           </div>
         </div>
 
         <div className="hero-art">
-          <div className="ring" />
+          <div className="star">$SKI</div>
           <div className="frame">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Ski Mask Dog" />
@@ -123,43 +118,27 @@ export default function Page() {
         </div>
       </header>
 
-      {/* STATS */}
-      <section className="container">
-        <div className="stats">
-          <div className="stat"><div className="num accent">$SKI</div><div className="lbl">Ticker</div></div>
-          <div className="stat"><div className="num">100%</div><div className="lbl">Community owned</div></div>
-          <div className="stat"><div className="num">0%</div><div className="lbl">Team tax</div></div>
-          <div className="stat"><div className="num flame">∞</div><div className="lbl">Cold energy</div></div>
-        </div>
-      </section>
+      {/* MEME MARQUEE */}
+      <MemeMarquee />
 
-      {/* ABOUT / LORE */}
+      {/* ABOUT */}
       <section id="about" className="block">
-        <div className="container about-grid">
-          <div>
-            <span className="eyebrow">The Lore</span>
-            <h2 className="section-title">A good boy who went incognito.</h2>
+        <div className="container">
+          <div className="section-head">
+            <h2 className="gta-title">ABOUT <span className="hl">SKI MASK DOG</span></h2>
             <p className="section-sub">
-              Somewhere between a snowstorm and a candle wick, a golden retriever
-              pulled a knitted ski mask over his face and became a legend. He doesn&apos;t
-              bark — he ships. He doesn&apos;t beg — he holds.
+              Forbes ran a piece on $SKI mask dog and the OG on pump.fun started
+              catching bids immediately — the mindshare was there from the start.
             </p>
           </div>
-          <div className="card lore-card">
-            <p>
-              <strong>Born cold.</strong> $SKI started as a pump.fun OG and caught bids
-              the second the mask went on. The mindshare was there from day one — the
-              dog just made it official.
-            </p>
-            <p>
-              <strong>No suits, no promises.</strong> No locked roadmap, no fake VCs,
-              no &quot;utility&quot; deck. Just a fair launch, a loud community, and a
-              dog who refuses to show his face.
-            </p>
-            <p>
-              <strong>The mask is the movement.</strong> Mint your own masked version,
-              post it, and rep the pack. Every PFP is one more dog incognito.
-            </p>
+          <div className="about-grid">
+            {FEATURES.map((f) => (
+              <div className="feature" key={f.title}>
+                <div className="ic">{Icon[f.icon]}</div>
+                <h3>{f.title}</h3>
+                <p>{f.text}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -167,29 +146,26 @@ export default function Page() {
       {/* TOKENOMICS */}
       <section id="tokenomics" className="block">
         <div className="container">
-          <span className="eyebrow">Tokenomics</span>
-          <h2 className="section-title">Simple. Cold. Fair.</h2>
-          <p className="section-sub">
-            No hidden wallets, no sneaky tax. What you see is what the pack gets.
-          </p>
-          <div className="tok-grid">
+          <div className="section-head">
+            <span className="eyebrow">Tokenomics</span>
+            <h2 className="gta-title" style={{ marginTop: 16 }}>SIMPLE <span className="hl">&amp; FAIR</span></h2>
+            <p className="section-sub">No hidden wallets, no sneaky tax. What you see is what the pack gets.</p>
+          </div>
+          <div className="grid-3">
             <div className="tok">
-              <div className="ic">❄️</div>
-              <h3>Fair launch</h3>
-              <p className="big">100%</p>
+              <div className="big">100%</div>
+              <h3>Fair Launch</h3>
               <p>Community owned from the first block. The dog answers to the holders.</p>
             </div>
             <div className="tok">
-              <div className="ic">🧊</div>
-              <h3>Tax</h3>
-              <p className="big">0 / 0</p>
-              <p>Zero buy tax, zero sell tax. Trade as cold as you want.</p>
+              <div className="big">0 / 0</div>
+              <h3>Zero Tax</h3>
+              <p>No buy tax, no sell tax. Trade as cold as you want, whenever you want.</p>
             </div>
             <div className="tok">
-              <div className="ic">🔒</div>
-              <h3>Liquidity</h3>
-              <p className="big">Burned</p>
-              <p>LP locked &amp; tossed in the snow. Nobody pulls the rug on this dog.</p>
+              <div className="big">LP</div>
+              <h3>Burned</h3>
+              <p>Liquidity locked and burned. Nobody pulls the rug on this dog.</p>
             </div>
           </div>
         </div>
@@ -198,44 +174,42 @@ export default function Page() {
       {/* HOW TO BUY */}
       <section id="buy" className="block">
         <div className="container">
-          <span className="eyebrow">How to Buy</span>
-          <h2 className="section-title">Mask up in 4 steps.</h2>
-          <div className="steps">
-            <div className="step">
-              <div className="n">01</div>
-              <h3>Get a wallet</h3>
-              <p>Download Phantom or Solflare and fund it with some SOL.</p>
-            </div>
-            <div className="step">
-              <div className="n">02</div>
-              <h3>Copy the contract</h3>
-              <p>Grab the $SKI address from the top of this page.</p>
-            </div>
-            <div className="step">
-              <div className="n">03</div>
-              <h3>Swap on Solana</h3>
-              <p>Paste the contract into Jupiter or Raydium and swap SOL for $SKI.</p>
-            </div>
-            <div className="step">
-              <div className="n">04</div>
-              <h3>Mask up</h3>
-              <p>Mint your PFP below and post it. Welcome to the pack. 🎭</p>
-            </div>
+          <div className="section-head">
+            <span className="eyebrow">How to Buy</span>
+            <h2 className="gta-title" style={{ marginTop: 16 }}>MASK UP IN <span className="hl">4 STEPS</span></h2>
           </div>
+          <div className="grid-4">
+            <div className="step"><div className="n">01</div><h3>Get a Wallet</h3><p>Grab Phantom or Solflare and load it with some SOL.</p></div>
+            <div className="step"><div className="n">02</div><h3>Copy Contract</h3><p>Take the $SKI address from the top of this page.</p></div>
+            <div className="step"><div className="n">03</div><h3>Swap on Solana</h3><p>Paste it into Jupiter or Raydium and swap SOL for $SKI.</p></div>
+            <div className="step"><div className="n">04</div><h3>Mask Up</h3><p>Mint your PFP below, post it, and welcome to the pack.</p></div>
+          </div>
+        </div>
+      </section>
+
+      {/* MEMORY GAME */}
+      <section id="game" className="block">
+        <div className="container">
+          <div className="section-head">
+            <span className="eyebrow">Mini Game</span>
+            <h2 className="gta-title" style={{ marginTop: 16 }}>MATCH THE <span className="hl">MASKS</span></h2>
+            <p className="section-sub">Flip the cards and find both dogs wearing the same mask. Fewer moves, more respect.</p>
+          </div>
+          <MemoryGame />
         </div>
       </section>
 
       {/* PFP GENERATOR */}
       <section id="generator" className="block">
         <div className="container">
-          <span className="eyebrow">PFP Lab · AI</span>
-          <h2 className="section-title">
-            Swap the dog&apos;s <span className="accent">mask</span>.
-          </h2>
-          <p className="section-sub">
-            Powered by FLUX Kontext AI. Type the ski mask you want, hit generate, and
-            our dog tries it on — same good boy, brand new balaclava.
-          </p>
+          <div className="section-head">
+            <span className="eyebrow">PFP Lab · AI</span>
+            <h2 className="gta-title" style={{ marginTop: 16 }}>SWAP THE <span className="hl">MASK</span></h2>
+            <p className="section-sub">
+              Powered by FLUX Kontext AI. Describe the ski mask you want and the dog
+              tries it on — same good boy, brand new balaclava.
+            </p>
+          </div>
           <PfpGenerator />
         </div>
       </section>
@@ -247,7 +221,7 @@ export default function Page() {
             <a className="brand" href="#top">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.png" alt="Ski Mask Dog" />
-              Ski Mask Dog
+              <span className="bt">SKI MASK DOG</span>
             </a>
             <a className="footer-x" href={X_URL} target="_blank" rel="noopener noreferrer">
               <XIcon /> X Community
@@ -255,12 +229,11 @@ export default function Page() {
           </div>
           <div className="footer-ca">CA: {CA}</div>
           <p className="footer-note">
-            $SKI is a community meme token with no intrinsic value or expectation of
-            financial return. It is for entertainment only — not financial advice.
-            Crypto is volatile; never invest more than you can afford to lose. Ski Mask
-            Dog is not affiliated with any exchange, person or brand referenced. Always
-            verify the contract address before buying. © {new Date().getFullYear()} Ski
-            Mask Dog. Stay cold. 🐶🎭
+            $SKI is a community meme token with no intrinsic value and no expectation of
+            financial return. It exists for entertainment only and is not financial
+            advice. Crypto is volatile — never spend more than you can afford to lose.
+            Ski Mask Dog is not affiliated with any exchange, person or brand referenced.
+            Always verify the contract address before buying. © {new Date().getFullYear()} Ski Mask Dog.
           </p>
         </div>
       </footer>

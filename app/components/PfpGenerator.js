@@ -7,10 +7,8 @@ const PRESETS = [
   "a neon cyan cyber ski mask with glowing trim",
   "a camo green tactical balaclava",
   "a gold and diamond-studded luxury ski mask",
-  "a pink fluffy winter ski mask",
   "a Solana purple and green gradient ski mask",
   "a flaming orange ski mask with fire pattern",
-  "a knitted ski mask with snowflake pattern",
 ];
 
 export default function PfpGenerator() {
@@ -49,7 +47,6 @@ export default function PfpGenerator() {
   }
 
   function download() {
-    // Open in a new tab so users can save the generated PFP.
     window.open(image, "_blank", "noopener,noreferrer");
   }
 
@@ -66,7 +63,7 @@ export default function PfpGenerator() {
                 <div className="spinner" />
                 <div>
                   <strong>Swapping the mask…</strong>
-                  <div style={{ color: "var(--muted)", fontSize: 14, marginTop: 4 }}>
+                  <div style={{ fontSize: 14, marginTop: 4, opacity: 0.85 }}>
                     This takes ~10–25 seconds.
                   </div>
                 </div>
@@ -75,19 +72,17 @@ export default function PfpGenerator() {
           </div>
           {isResult && !loading && (
             <button
-              className="btn btn-ghost"
+              className="btn"
               style={{ width: "100%", justifyContent: "center", marginTop: 14 }}
               onClick={download}
             >
-              ⬇ Open / Save PFP
+              Open / Save PFP
             </button>
           )}
         </div>
 
         <div>
-          <label className="fld" htmlFor="prompt">
-            Describe the new ski mask
-          </label>
+          <label className="fld" htmlFor="prompt">Describe the new ski mask</label>
           <textarea
             id="prompt"
             placeholder="e.g. a glowing cyan cyber ski mask with neon trim"
@@ -105,12 +100,12 @@ export default function PfpGenerator() {
           </div>
 
           <div className="gen-actions">
-            <button className="btn btn-primary" onClick={generate} disabled={loading}>
-              {loading ? "Masking up…" : "🎭 Generate PFP"}
+            <button className="btn btn-yellow" onClick={generate} disabled={loading}>
+              {loading ? "Masking up…" : "Generate PFP"}
             </button>
             {isResult && (
               <button
-                className="btn btn-ghost"
+                className="btn"
                 onClick={() => {
                   setImage("/logo.png");
                   setIsResult(false);
@@ -118,7 +113,7 @@ export default function PfpGenerator() {
                 }}
                 disabled={loading}
               >
-                ↺ Reset
+                Reset
               </button>
             )}
           </div>
@@ -126,12 +121,9 @@ export default function PfpGenerator() {
           {error && <div className="err">{error}</div>}
 
           <div className="disclaimer">
-            <span>⚠️</span>
-            <span>
-              <strong>Mask swaps only.</strong> This generator can only restyle the ski
-              mask on the dog&apos;s head. The dog, its face, fur and the background stay
-              exactly the same — any other request is ignored.
-            </span>
+            <b>Mask swaps only.</b> This generator can only restyle the ski mask on the
+            dog&apos;s head. The dog, its face, fur and the background stay exactly the
+            same — any other request is ignored.
           </div>
         </div>
       </div>
