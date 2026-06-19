@@ -69,10 +69,11 @@ export default function Page() {
           </a>
           <div className="nav-links">
             <a className="link" href="#about">About</a>
+            <a className="link" href="#generator">PFP Lab</a>
             <a className="link" href="#tokenomics">Tokenomics</a>
             <a className="link" href="#buy">How to Buy</a>
+            <a className="link" href="#chart">Chart</a>
             <a className="link" href="#game">Game</a>
-            <a className="link" href="#generator">PFP Lab</a>
             <a className="nav-x" href={X_URL} target="_blank" rel="noopener noreferrer" aria-label="X Community">
               <XIcon />
             </a>
@@ -143,6 +144,21 @@ export default function Page() {
         </div>
       </section>
 
+      {/* PFP GENERATOR */}
+      <section id="generator" className="block">
+        <div className="container">
+          <div className="section-head">
+            <span className="eyebrow">PFP Lab · AI</span>
+            <h2 className="gta-title" style={{ marginTop: 16 }}>SWAP THE <span className="hl">MASK</span></h2>
+            <p className="section-sub">
+              Powered by FLUX Kontext AI. Describe the ski mask you want and the dog
+              tries it on — same good boy, brand new balaclava.
+            </p>
+          </div>
+          <PfpGenerator />
+        </div>
+      </section>
+
       {/* TOKENOMICS */}
       <section id="tokenomics" className="block">
         <div className="container">
@@ -187,6 +203,24 @@ export default function Page() {
         </div>
       </section>
 
+      {/* CHART */}
+      <section id="chart" className="block">
+        <div className="container">
+          <div className="section-head">
+            <span className="eyebrow">Live Chart</span>
+            <h2 className="gta-title" style={{ marginTop: 16 }}>WATCH IT <span className="hl">RUN</span></h2>
+            <p className="section-sub">Live $SKI price and trades, straight from DexScreener.</p>
+          </div>
+          <div className="chart-embed">
+            <iframe
+              src="https://dexscreener.com/solana/9gwrTXtAS5HDesaAM7GGMY3MxAgpRbcwoGGNxf6sJ2GW?embed=1&loadChartSettings=0&chartLeftToolbar=0&chartDefaultOnMobile=1&chartTheme=dark&theme=dark&chartStyle=0&chartType=usd&interval=15"
+              title="DexScreener $SKI chart"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* MEMORY GAME */}
       <section id="game" className="block">
         <div className="container">
@@ -196,21 +230,6 @@ export default function Page() {
             <p className="section-sub">Flip the cards and find both dogs wearing the same mask. Fewer moves, more respect.</p>
           </div>
           <MemoryGame />
-        </div>
-      </section>
-
-      {/* PFP GENERATOR */}
-      <section id="generator" className="block">
-        <div className="container">
-          <div className="section-head">
-            <span className="eyebrow">PFP Lab · AI</span>
-            <h2 className="gta-title" style={{ marginTop: 16 }}>SWAP THE <span className="hl">MASK</span></h2>
-            <p className="section-sub">
-              Powered by FLUX Kontext AI. Describe the ski mask you want and the dog
-              tries it on — same good boy, brand new balaclava.
-            </p>
-          </div>
-          <PfpGenerator />
         </div>
       </section>
 
