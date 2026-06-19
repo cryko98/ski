@@ -27,18 +27,41 @@ export default function PfpGenerator() {
     setError("");
     setLoading(true);
     try {
+      // Step 1: submit the job and get a request id back fast.
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: p }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Generation failed. Try again.");
-      } else {
-        setImage(data.imageUrl);
-        setIsResult(true);
+      if (!res.ok || !data.requestId) {
+        setError(data.error || "Could not start the generator. Try again.");
+        setLoading(false);
+        return;
       }
+
+      // Step 2: poll for the result (up to ~2.5 min) — no serverless timeout.
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const start = Date.now();
+      while (Date.now() - start < 150000) {
+        await sleep(2500);
+        const s = await fetch(`/api/generate?id=${encodeURIComponent(data.requestId)}`, {
+          cache: "no-store",
+        });
+        const sd = await s.json();
+        if (sd.status === "COMPLETED" && sd.imageUrl) {
+          setImage(sd.imageUrl);
+          setIsResult(true);
+          setLoading(false);
+          return;
+        }
+        if (sd.status === "FAILED") {
+          setError(sd.error || "The mask swap failed. Try a different prompt.");
+          setLoading(false);
+          return;
+        }
+      }
+      setError("This is taking unusually long. Please try again.");
     } catch {
       setError("Network error. Please try again.");
     } finally {

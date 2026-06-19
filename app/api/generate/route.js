@@ -1,7 +1,7 @@
 import { BASE_IMAGE_DATA_URI } from "./baseImage";
 
-// Allow up to 60s — FLUX Kontext usually finishes well within this window.
-export const maxDuration = 60;
+// Each call is short now (submit OR one status check), so a small budget is plenty.
+export const maxDuration = 30;
 export const dynamic = "force-dynamic";
 
 const MODEL = "fal-ai/flux-pro/kontext";
@@ -27,8 +27,11 @@ function json(data, status = 200) {
   });
 }
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function authHeaders(key) {
+  return { Authorization: `Key ${key}`, "Content-Type": "application/json" };
+}
 
+// --- Step 1: submit the job, return a request id immediately ---
 export async function POST(req) {
   const key = process.env.FLUX_API_KEY;
   if (!key) {
@@ -50,16 +53,10 @@ export async function POST(req) {
     return json({ error: "Describe the ski mask you want first." }, 400);
   }
 
-  const authHeaders = {
-    Authorization: `Key ${key}`,
-    "Content-Type": "application/json",
-  };
-
   try {
-    // 1) Submit to the queue.
     const submit = await fetch(QUEUE, {
       method: "POST",
-      headers: authHeaders,
+      headers: authHeaders(key),
       body: JSON.stringify({
         prompt: buildPrompt(userPrompt),
         image_url: BASE_IMAGE_DATA_URI,
@@ -73,46 +70,59 @@ export async function POST(req) {
     if (!submit.ok) {
       const detail = await submit.text();
       return json(
-        { error: "Could not start the generator.", detail: detail.slice(0, 400) },
+        { error: "Could not start the generator. Check the API key.", detail: detail.slice(0, 300) },
         502
       );
     }
 
-    const submitData = await submit.json();
-    const requestId = submitData.request_id;
-    if (!requestId) {
+    const data = await submit.json();
+    if (!data.request_id) {
       return json({ error: "Unexpected response from the image service." }, 502);
     }
+    return json({ requestId: data.request_id });
+  } catch {
+    return json({ error: "Something went wrong talking to the generator." }, 500);
+  }
+}
 
-    const statusUrl = `${QUEUE}/requests/${requestId}/status`;
-    const resultUrl = `${QUEUE}/requests/${requestId}`;
+// --- Step 2: client polls this with ?id=... until COMPLETED ---
+export async function GET(req) {
+  const key = process.env.FLUX_API_KEY;
+  if (!key) return json({ error: "FLUX_API_KEY is missing on the server." }, 500);
 
-    // 2) Poll until completed (cap ~55s).
-    const deadline = Date.now() + 54_000;
-    while (Date.now() < deadline) {
-      await sleep(1500);
-      const st = await fetch(statusUrl, { headers: authHeaders, cache: "no-store" });
-      if (!st.ok) continue;
-      const stData = await st.json();
-      if (stData.status === "COMPLETED") break;
-      if (stData.status === "FAILED" || stData.status === "ERROR") {
-        return json({ error: "The mask swap failed. Try a different prompt." }, 502);
-      }
+  const id = new URL(req.url).searchParams.get("id");
+  if (!id) return json({ error: "Missing request id." }, 400);
+
+  try {
+    const st = await fetch(`${QUEUE}/requests/${id}/status`, {
+      headers: authHeaders(key),
+      cache: "no-store",
+    });
+    if (!st.ok) return json({ status: "IN_PROGRESS" });
+
+    const stData = await st.json();
+    const status = stData.status;
+
+    if (status === "FAILED" || status === "ERROR") {
+      return json({ status: "FAILED", error: "The mask swap failed. Try a different prompt." });
     }
 
-    // 3) Fetch the result.
-    const res = await fetch(resultUrl, { headers: authHeaders, cache: "no-store" });
-    if (!res.ok) {
-      return json({ error: "Timed out while masking up. Please try again." }, 504);
+    if (status !== "COMPLETED") {
+      return json({ status: status || "IN_PROGRESS" });
     }
+
+    // Completed — fetch the result image.
+    const res = await fetch(`${QUEUE}/requests/${id}`, {
+      headers: authHeaders(key),
+      cache: "no-store",
+    });
+    if (!res.ok) return json({ status: "IN_PROGRESS" });
     const data = await res.json();
     const imageUrl = data?.images?.[0]?.url;
-    if (!imageUrl) {
-      return json({ error: "No image came back. Please try again." }, 502);
-    }
+    if (!imageUrl) return json({ status: "FAILED", error: "No image came back. Please try again." });
 
-    return json({ imageUrl, seed: data.seed ?? null });
-  } catch (err) {
-    return json({ error: "Something went wrong talking to the generator." }, 500);
+    return json({ status: "COMPLETED", imageUrl, seed: data.seed ?? null });
+  } catch {
+    return json({ status: "IN_PROGRESS" });
   }
 }
