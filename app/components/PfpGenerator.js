@@ -71,7 +71,13 @@ export default function PfpGenerator() {
   }
 
   function download() {
-    window.open(image, "_blank", "noopener,noreferrer");
+    if (!isResult) return;
+    const a = document.createElement("a");
+    a.href = `/api/download?url=${encodeURIComponent(image)}`;
+    a.download = "ski-mask-dog-pfp.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   return (
@@ -96,11 +102,11 @@ export default function PfpGenerator() {
           </div>
           {isResult && !loading && (
             <button
-              className="btn"
+              className="btn btn-yellow"
               style={{ width: "100%", justifyContent: "center", marginTop: 14 }}
               onClick={download}
             >
-              Open / Save PFP
+              Download PFP
             </button>
           )}
         </div>
