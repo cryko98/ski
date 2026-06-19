@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 
 const MODEL = "fal-ai/flux-pro/kontext";
 const QUEUE = `https://queue.fal.run/${MODEL}`;
+const FAL_ORIGIN = "https://queue.fal.run/";
 
 // The base image is ALWAYS the Ski Mask Dog logo. We only ever let the user
 // restyle the ski mask on the dog's head — everything else is locked.
@@ -31,7 +32,12 @@ function authHeaders(key) {
   return { Authorization: `Key ${key}`, "Content-Type": "application/json" };
 }
 
-// --- Step 1: submit the job, return a request id immediately ---
+// Only ever fetch fal.ai queue URLs (we send our API key, so guard against SSRF).
+function isFalUrl(u) {
+  return typeof u === "string" && u.startsWith(FAL_ORIGIN);
+}
+
+// --- Step 1: submit the job, return the fal-provided status/result URLs ---
 export async function POST(req) {
   const key = process.env.FLUX_API_KEY;
   if (!key) {
@@ -76,28 +82,33 @@ export async function POST(req) {
     }
 
     const data = await submit.json();
-    if (!data.request_id) {
-      return json({ error: "Unexpected response from the image service." }, 502);
+    // Use the URLs fal gives us — they point at the correct app id, which is NOT
+    // necessarily the full model path (e.g. flux-pro vs flux-pro/kontext).
+    const statusUrl = data.status_url;
+    const responseUrl = data.response_url;
+    if (!statusUrl || !responseUrl) {
+      return json({ error: "Unexpected response from the image service.", detail: JSON.stringify(data).slice(0, 300) }, 502);
     }
-    return json({ requestId: data.request_id });
+    return json({ statusUrl, responseUrl });
   } catch {
     return json({ error: "Something went wrong talking to the generator." }, 500);
   }
 }
 
-// --- Step 2: client polls this with ?id=... until COMPLETED ---
+// --- Step 2: client polls with ?status=...&result=... until COMPLETED ---
 export async function GET(req) {
   const key = process.env.FLUX_API_KEY;
   if (!key) return json({ error: "FLUX_API_KEY is missing on the server." }, 500);
 
-  const id = new URL(req.url).searchParams.get("id");
-  if (!id) return json({ error: "Missing request id." }, 400);
+  const params = new URL(req.url).searchParams;
+  const statusUrl = params.get("status");
+  const responseUrl = params.get("result");
+  if (!isFalUrl(statusUrl) || !isFalUrl(responseUrl)) {
+    return json({ error: "Bad request." }, 400);
+  }
 
   try {
-    const st = await fetch(`${QUEUE}/requests/${id}/status`, {
-      headers: authHeaders(key),
-      cache: "no-store",
-    });
+    const st = await fetch(statusUrl, { headers: authHeaders(key), cache: "no-store" });
     if (!st.ok) return json({ status: "IN_PROGRESS" });
 
     const stData = await st.json();
@@ -106,16 +117,12 @@ export async function GET(req) {
     if (status === "FAILED" || status === "ERROR") {
       return json({ status: "FAILED", error: "The mask swap failed. Try a different prompt." });
     }
-
     if (status !== "COMPLETED") {
       return json({ status: status || "IN_PROGRESS" });
     }
 
     // Completed — fetch the result image.
-    const res = await fetch(`${QUEUE}/requests/${id}`, {
-      headers: authHeaders(key),
-      cache: "no-store",
-    });
+    const res = await fetch(responseUrl, { headers: authHeaders(key), cache: "no-store" });
     if (!res.ok) return json({ status: "IN_PROGRESS" });
     const data = await res.json();
     const imageUrl = data?.images?.[0]?.url;
